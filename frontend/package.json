@@ -11,6 +11,7 @@
   "author": "minkyu lee",
   "license": "MIT",
   "dependencies": {
+    "axios": "^1.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.10.0"
@@ -26,8 +27,11 @@
     "@types/react-router-dom": "^5.3.3",
     "babel-loader": "^9.1.2",
     "clean-webpack-plugin": "^4.0.0",
+    "css-loader": "^6.7.3",
+    "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.5.1",
     "mini-css-extract-plugin": "^2.7.5",
+    "style-loader": "^3.3.2",
     "ts-loader": "^9.4.2",
     "typescript": "^5.0.4",
     "webpack": "^5.80.0",

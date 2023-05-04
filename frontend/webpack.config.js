@@ -19,7 +19,7 @@ module.exports = {
   devServer: {
     port: 3000,
     hot: true,
-    open: true,
+    historyApiFallback: true,
     client: {
       overlay: true,
       progress: true,
@@ -30,11 +30,9 @@ module.exports = {
       {
         oneOf: [
           {
-            test: /\.(ts|tsx)$/i,
+            test: /\.(ts|tsx)$/,
             exclude: /node_modules/,
-            use: {
-              loader: 'babel-loader',
-            },
+            use: ['babel-loader', 'ts-loader'],            
           },
           {
             test: /\.css$/,
@@ -45,8 +43,11 @@ module.exports = {
             ],
           },
           {
-            test: /\.tsx$/i,
-          },
+            test: /\.(png|jpg|svg)$/,
+            use: {
+              loader:'file-loader',
+            }
+          }
         ],
       },
     ],
