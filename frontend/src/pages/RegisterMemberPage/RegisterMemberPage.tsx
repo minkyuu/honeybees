@@ -1,49 +1,49 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { redirect, useNavigate } from 'react-router-dom';
 
 import { REGISTER_ERROR_MESSAGE } from '../../constants/processMessage';
+
 import styles from './RegisterMemberPage.module.css';
 
-import axios from 'axios';
+
+import { db } from '../../firebase.config';
+import { ref, set, child, get } from "firebase/database";
+import { Link } from 'react-router-dom';
+import useDebounce from '../../utils/useDebounce';
 
 interface Member {
   id: string,
-  nickName: string,
+  nickname: string,
   password: string,
 }
 
 interface ErrorMessage {
-  null: string,
-  id: string,
-  nickName?: string,
+  id?: string,
+  nickname?: string,
   password?: string,
   passwordChecker?: string,
 }
 
 const initMessage: ErrorMessage = {
-  null: '',
   id: '',
-  nickName: '',
+  nickname: '',
   password: '',
   passwordChecker: '',
 };
 
 const RegisterMemberPage = () => {
   const idRef = useRef<HTMLInputElement>(null);
-  const nickNameRef = useRef<HTMLInputElement>(null);
+  const nicknameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
-  const [isValidId, setIsValidId] = useState(true);
-  const [isValidNickName, setIsValidNickName] = useState(true);
-  const [isValidPassword, setIsValidPassword] = useState(true);
-  const [passwordChecker, setPasswordChecker] = useState(true);
+  
+  const [isValidId, setIsValidId] = useState(false);
+  const [isValidNickname, setIsValidNickname] = useState(false);
+  const [isValidPassword, setIsValidPassword] = useState(false);
+  const [passwordChecker, setPasswordChecker] = useState(false);
+  
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>(initMessage);
-
-  const isInputNull = (input: string): boolean => {
-    if (input.length === 0) {
-      return true;
-    }
-    return false;
-  };
-
+  const navigate = useNavigate();
+  
   const validateId = (id: string): boolean => {
     const idRegex = /[^a-zA-Z0-9]/g;
 
@@ -53,27 +53,38 @@ const RegisterMemberPage = () => {
 
     return true;
   }
-
-  const isDuplicateId = async (id: string): Promise<boolean> => {
+  
+  const isDuplicateId = async (id: string) => {
     // GET 요청 - DB에 동일 ID 존재 여부 체크
-    // const response = await axios('https://honeybees-db-default-rtdb.firebaseio.com/member.json');
+    let isDuplicate = false;
 
-    return true;
+    await get(child(ref(db), `member/${id}`)).then((snapshot) => {
+      if (snapshot.exists()) {
+        isDuplicate = true;
+      } 
+    });
+
+    return isDuplicate;
   };
 
-  
-  const checkDuplicateId = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const checkDuplicateId = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // const checkDuplicateId = async (id: string) => {
+    // console.log('ID 입력값 체크 : ', e.target.value);
+    // console.log('ID 입력값 체크 : ', id);
     if (!validateId(e.target.value)) {
+    // if (!validateId(id)) {
       setIsValidId(false);
-
-      errorMessage.id = REGISTER_ERROR_MESSAGE.INVALIDATE_ID
+      
+      errorMessage.id = REGISTER_ERROR_MESSAGE.INVALIDATE_ID;
       setErrorMessage({...errorMessage});
       return;
     }
     
-    if (!isDuplicateId(e.target.value)) {
+    let isDuplicate = await isDuplicateId(e.target.value);
+    // let isDuplicate = await isDuplicateId(id);
+    if (isDuplicate) {
       setIsValidId(false);
-
+      
       errorMessage.id = REGISTER_ERROR_MESSAGE.DUPLICATE_ID;
       setErrorMessage({...errorMessage});
       return;
@@ -84,39 +95,48 @@ const RegisterMemberPage = () => {
   };
 
 
-  const validateNickName = (nickName: string): boolean => {
-    const nickNameRegex = /[^a-zA-Zㄱ-ㅎ가-힣0-9\_\-]/g;
+  const validateNickname = (nickname: string): boolean => {
+    const nicknameRegex = /[^a-zA-Z0-9\_\-]/g;
 
-    if (nickName.match(nickNameRegex)) {
+    if (nickname.match(nicknameRegex)) {
       return false;
     }
 
     return true;
   };
 
-  const isDuplicateNickname = (nickName: string) => {
+  const isDuplicateNickname = async (nickname: string) => {
     // GET 요청 - DB에 동일 닉네임 존재 여부 체크
+    let isDuplicate = false;
+    
+    await get(child(ref(db), `nickname/${nickname}`)).then((snapshot) => {
+      if (snapshot.exists()){
+        isDuplicate = true;
+      }
+    });
 
+    return isDuplicate;
   };
 
-  const checkDuplicateNickName = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!validateNickName(e.target.value)) {
-      setIsValidNickName(false);
+  const checkDuplicateNickname = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!validateNickname(e.target.value)) {
+      setIsValidNickname(false);
 
-      errorMessage.nickName = REGISTER_ERROR_MESSAGE.INVALIDATE_NICKNAME;
+      errorMessage.nickname = REGISTER_ERROR_MESSAGE.INVALIDATE_NICKNAME;
       setErrorMessage({...errorMessage});
       return;
     }
 
-    if (!isDuplicateNickname) {
-      setIsValidNickName(false);
+    let isDuplicate = await isDuplicateNickname(e.target.value);
+    if (isDuplicate) {
+      setIsValidNickname(false);
 
-      errorMessage.nickName = REGISTER_ERROR_MESSAGE.DUPLICATE_NICKNAME;
+      errorMessage.nickname = REGISTER_ERROR_MESSAGE.DUPLICATE_NICKNAME;
       setErrorMessage({...errorMessage});
       return;
     }
 
-    setIsValidNickName(true);
+    setIsValidNickname(true);
   }
 
   const validatePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,20 +171,62 @@ const RegisterMemberPage = () => {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const registerMember = async (memberInfo: Member) => {
+    try {
+      await set(ref(db, 'member/' + memberInfo.id), {
+        id: memberInfo.id,
+        nickname: memberInfo.nickname,
+        password: memberInfo.password,
+      });
+      await set(ref(db, 'nickname/' + memberInfo.nickname), {
+        id: memberInfo.id,
+        userInfo: {
+          profileImg: '',
+          introduction: '',
+          follower: 0,
+          follow: 0,
+        }
+      });
+      
+      await console.log("가입 성공");
+      await navigate('/register-success', {
+        state: {
+          id: memberInfo.id,
+          nickname: memberInfo.nickname
+        }
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (isValidId && isValidNickName && isValidPassword) {
-      if (idRef.current && nickNameRef.current && passwordRef.current){
+    if (isValidId && isValidNickname && isValidPassword) {
+      if (idRef.current && nicknameRef.current && passwordRef.current){
         const newMember: Member = {
           id: idRef.current.value,
-          nickName: nickNameRef.current.value, 
+          nickname: nicknameRef.current.value, 
           password: passwordRef.current.value,
         }
 
         // POST 요청 - DB에 회원 등록
-
-
+        registerMember(newMember);
+      }
+    } else {
+      if (!isValidId) {
+        errorMessage.id = REGISTER_ERROR_MESSAGE.INPUT_NULL;
+        setErrorMessage({...errorMessage});
+        idRef.current?.focus();
+      } else if (!isValidNickname) {
+        errorMessage.nickname = REGISTER_ERROR_MESSAGE.INPUT_NULL;
+        setErrorMessage({...errorMessage});
+        nicknameRef.current?.focus;
+      } else if (!isValidPassword) {
+        errorMessage.password = REGISTER_ERROR_MESSAGE.INPUT_NULL;
+        setErrorMessage({...errorMessage});
+        passwordRef.current?.focus;
       }
     }
   }
@@ -175,37 +237,38 @@ const RegisterMemberPage = () => {
       <form className={styles.registerForm}>
         <input
           type="text"
-          className={`${styles.input} ${!isValidId && styles.error}`}
+          className={`${styles.input} ${(!isValidId && errorMessage.id!.length > 0) && styles.error}`}
           placeholder="아이디를 입력해주세요."
           ref={idRef}
           onChange={checkDuplicateId}
+          // onChange={checkIdHandler}
         />
-        {!isValidId && <span className={styles.errorMessage}>{errorMessage.id}</span>}
+        {(!isValidId && errorMessage.id!.length > 0) && <span className={styles.errorMessage}>{errorMessage.id}</span>}
         <input
           type="text"
-          className={`${styles.input} ${!isValidNickName && styles.error}`}
+          className={`${styles.input} ${(!isValidNickname && errorMessage.nickname!.length > 0) && styles.error}`}
           placeholder="닉네임을 입력해주세요."
-          ref={nickNameRef}
-          onChange={checkDuplicateNickName}
+          ref={nicknameRef}
+          onChange={checkDuplicateNickname}
         />
-        {!isValidNickName && <span className={styles.errorMessage}>{errorMessage.nickName}</span>}
+        {(!isValidNickname && errorMessage.nickname!.length > 0) && <span className={styles.errorMessage}>{errorMessage.nickname}</span>}
         <input
           type="password"
-          className={`${styles.input} ${!isValidPassword && styles.error}`}
+          className={`${styles.input} ${(!isValidPassword && errorMessage.password!.length > 0) && styles.error}`}
           placeholder="비밀번호를 입력해주세요."
           ref={passwordRef}
           autoComplete="off"
           onChange={validatePassword}
         />
-        {!isValidPassword && <span className={styles.errorMessage}>{errorMessage.password}</span>}
+        {(!isValidPassword && errorMessage.password!.length > 0) && <span className={styles.errorMessage}>{errorMessage.password}</span>}
         <input
           type="password"
-          className={`${styles.input} ${!passwordChecker && styles.error}`}
+          className={`${styles.input} ${(!passwordChecker && errorMessage.passwordChecker!.length > 0) && styles.error}`}
           placeholder="비밀번호를 한 번 더 입력해주세요."
           autoComplete="off"
           onChange={doubleCheckPassword}
         />
-        {!passwordChecker && <span className={styles.errorMessage}>{errorMessage.passwordChecker}</span>}
+        {(!passwordChecker && errorMessage.passwordChecker!.length > 0) && <span className={styles.errorMessage}>{errorMessage.passwordChecker}</span>}
         <button type="button" className={styles.submitButton} onClick={handleSubmit}>회원가입</button>
       </form>
     </div>

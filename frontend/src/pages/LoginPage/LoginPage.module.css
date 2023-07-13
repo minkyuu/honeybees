@@ -1,4 +1,5 @@
 .container {
+  margin-top: 80px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -11,7 +12,7 @@
 .input {
   margin: 0;
   padding: 0;
-  padding-left: 8px;
+  padding-left: 12px;
   box-sizing: border-box;
   width: 300px;
   height: 40px;
@@ -26,9 +27,9 @@
   outline: none;
 }
 
-.error {
+/* .error { */
   /* border: 1px solid red; */
-}
+/* } */
 
 .error:focus,
 .error:active {
@@ -43,27 +44,64 @@
   margin: 0 0 -4px 6px;
 }
 
+.authentication {
+  align-self: center;
+  margin-bottom: 12px;
+}
+
 .loginInfo {
   display: flex;
   flex-direction: column;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   gap: 4px;
 }
 
-.button {
+.loginButton {
   width: 300px;
   height: 40px;
-  margin-top: 12px;
+  margin: 12px 0 8px;
   appearance: none;
   border: none;
   border-radius: 4px;
   background-color: #F2BB13;
   font-size: 14px;
   font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.googleLogo {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
 }
 
 .links {
   display: flex;
-  margin: 24px;
-  gap: 12px;
+  align-items: center;
+  width: 300px;
+  margin: 24px 0;
+  padding-left: 50px;
+  gap: 6px;
+}
+
+.link:visited,
+.link:link {
+  font-size: 14px;
+  color: gray;
+  text-decoration: none;
+}
+
+/* .link:not(::after):hover, */
+.link:hover,
+.link:focus,
+.link:active {
+  text-decoration: underline;
+}
+
+.separator {
+  color: gray;
+  font-size: 14px;
+  margin: 0 4px;
 }

@@ -43,7 +43,7 @@ module.exports = {
             ],
           },
           {
-            test: /\.(png|jpg|svg)$/,
+            test: /\.(png|jpg|jpeg|svg)$/,
             use: {
               loader:'file-loader',
             }
@@ -69,5 +69,10 @@ module.exports = {
         path.resolve(__dirname, 'dist/**/*'),
       ],
     }),
+    new MiniCssExtractPlugin({
+      linkType: false,
+      filename: '[name].[contenthash].css',
+      chunkFilename: '[id].[contenthash].css',
+    })
   ],
 };

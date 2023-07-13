@@ -1,0 +1,93 @@
+.container {
+  display: flex;
+  width: 710px;
+  height: 220px;
+  border: 1px solid blue;
+  overflow-x: auto;
+  flex-direction: column;
+  border-radius: 12px;
+}
+
+.graph {
+  width: 900px;
+  border: 1px solid red;
+  margin-top: 12px;
+}
+
+.calendar {
+  border-spacing: 4px;
+  font-size: 12px;
+
+  border: 1px solid black;
+  overflow: auto;
+  white-space: nowrap;
+}
+
+.calendarRow {
+  height: 12px;
+  box-sizing: border-box;
+}
+
+.calendarDayLabel {
+  width: 34px;
+  /* height: 11px; */
+  padding: 0;
+  font-size: 12px;
+}
+
+.calendarDay {
+  width: 12px;
+  background-color: rgb(235, 237, 240);
+  border: 1px solid rgba(27, 31, 35, 0.06);
+  border-radius: 2px;
+  font-size: 0;
+  box-sizing: border-box;
+  /* opacity: 0.5; */
+}
+
+.colorInfo {
+  width: 115px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.colorRectContainer {
+  line-height: 12px;
+}
+
+.colorRect {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  margin: 1px;
+  border: 1px solid rgba(27, 31, 35, 0.06);
+  border-radius: 2px;
+}
+
+/* img[data-level=4] {
+  background-color: #F2BB13;
+} */
+
+.level0 {
+  background-color: rgb(235, 237, 240);
+}
+
+.level1 {
+  background-color: #edcc66;
+}
+
+.level2 {
+  background-color: #edc343;
+}
+
+.level3 {
+  background-color: #d3a824;
+}
+
+.level4 {
+  background-color: #c7980c;
+}
